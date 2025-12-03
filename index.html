@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纖體顧客諮詢表</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* --- 全局設定 --- */
+        body {
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            background-color: #e9f5ed; /* 淺綠色背景，清新感 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            color: #333;
+        }
+
+        h1 {
+            color: #28a745; /* 綠色主調 */
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        /* --- 輸入表單區域 --- */
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            color: #fff;
+            background-color: #28a745; /* 綠色標題條 */
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin: 25px 0 15px 0;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+
+        .form-group:last-child {
+            border-bottom: none;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 1.05em;
+        }
+
+        .sub-label {
+            font-size: 0.85em;
+            color: #999;
+            margin-left: 5px;
+            font-weight: normal;
+        }
+
+        input[type="text"], 
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            background: #fafafa;
+            box-sizing: border-box;
+            transition: border 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            border-color: #28a745;
+            outline: none;
+            background: #fff;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* 選項樣式 */
+        .radio-group, .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .radio-group label, .checkbox-group label {
+            font-weight: normal;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            background: #f4f4f4;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.95em;
+            transition: background 0.2s;
+        }
+
+        .radio-group label:hover, .checkbox-group label:hover {
+            background: #e0f0e4; /* 淺綠hover */
+        }
+
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 6px;
+            transform: scale(1.1);
+        }
+
+        /* 動態顯示的詳細輸入框 */
+        .detail-input {
+            display: none;
+            margin-top: 10px;
+            padding-left: 10px;
+            border-left: 3px solid #28a745;
+        }
+        
+        .detail-input.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+            transition: transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* --- 產出圖片的模板樣式 --- */
+        #capture-area {
+            width: 600px; /* 固定寬度 */
+            background: #fff;
+            padding: 40px;
+            box-sizing: border-box;
+            position: absolute;
+            top: -9999px; left: -9999px; /* 預設隱藏 */
+            border-top: 15px solid #28a745; /* 頂部裝飾條 */
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            line-height: 1.6;
+        }
+
+        #capture-area h2 {
+            text-align: center;
+            color: #28a745;
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+        
+        .res-header {
+            text-align: center;
+            color: #666;
+            font-weight: bold;
+            margin-bottom: 30px;
+            font-size: 14px;
+            letter-spacing: 2px;
+            border-bottom: 1px dashed #e0e0e0;
+            padding-bottom: 15px;
+        }
+
+        .res-grid-basic {
+            display: flex;
+            justify-content: space-around;
+            background: #f8fcf9; /* 淺綠背景 */
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap; /* 換行 */
+            gap: 10px;
+        }
+        .res-grid-basic > div {
+            min-width: 150px;
+            text-align: center;
+        }
+        .res-grid-basic strong {
+            color: #28a745;
+        }
+
+
+        .res-section {
+            margin-top: 25px;
+        }
+
+        .res-section-title {
+            background: #28a745;
+            color: #fff;
+            padding: 5px 10px;
+            font-size: 16px;
+            display: inline-block;
+            margin-bottom: 10px;
+            border-radius: 3px;
+        }
+
+        .res-row {
+            display: flex;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed #f0f0f0;
+            padding-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .res-label {
+            min-width: 180px; /* 增加標籤寬度 */
+            font-weight: bold;
+            color: #333;
+        }
+
+        .res-value {
+            flex: 1;
+            color: #555;
+            line-height: 1.4;
+            white-space: pre-wrap; /* 保留換行 */
+        }
+
+        .footer-credit {
+            margin-top: 30px;
+            text-align: right;
+            font-size: 12px;
+            color: #aaa;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 10px;
+        }
+
+        /* 輸出結果區 */
+        #output-container {
+            margin-top: 20px;
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        
+        #output-container img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .hint { color: #28a745; font-weight: bold; margin: 10px 0; }
+
+    </style>
+</head>
+<body>
+
+    <h1>🌿 纖體顧客諮詢表 📋</h1>
+    <div class="subtitle">為了提供您最精準的減重方案，請您詳細填寫以下資訊</div>
+
+    <div class="form-container">
+        
+        <div class="section-title">A. 基本資料與目標</div>
+        
+        <div class="form-group">
+            <label>1. 年齡</label>
+            <input type="number" id="q1_age" placeholder="請填寫數字">
+        </div>
+
+        <div class="form-group">
+            <label>2. 性別</label>
+            <div class="radio-group">
+                <label><input type="radio" name="q2_gender" value="男生"> 男生</label>
+                <label><input type="radio" name="q2_gender" value="女生"> 女生</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>3. 職業</label>
+            <input type="text" id="q3_job" placeholder="請填寫職業 (例如：上班族/學生)">
+        </div>
+
+        <div class="form-group">
+            <label>4. 身高 (公分)</label>
+            <input type="number" id="q4_height" placeholder="請填寫數字 (例如：160)">
+        </div>
+
+        <div class="form-group">
+            <label>5. 體重 (公斤)</label>
+            <input type="number" id="q5_weight" placeholder="請填寫數字 (例如：55)">
+        </div>
+
+        <div class="form-group">
+            <label>6. 體脂率 (%)</label>
+            <input type="number" step="0.1" id="q6_bodyfat" placeholder="請填寫數字 (例如：28.5)">
+        </div>
+
+        <div class="form-group">
+            <label>7. 最在意的部位</label>
+            <input type="text" id="q7_concern" placeholder="例如：肚子/大腿/手臂">
+        </div>
+
+        <div class="form-group">
+            <label>8. 想瘦幾公斤</label>
+            <input type="number" id="q8_target_weight_loss" placeholder="請填寫數字 (例如：5)">
+        </div>
+
+        <div class="form-group">
+            <label>9. 預估多久時間瘦下來？</label>
+            <input type="text" id="q_time_goal" placeholder="例如：3個月內、婚禮前、越快越好...">
+        </div>
+
+        <div class="form-group">
+            <label>10. 是否使用過相關瘦身產品？</label>
+            <div class="radio-group">
+                <label><input type="radio" name="q9_used_product" value="是" onclick="toggle('q9_detail', true)"> 是</label>
+                <label><input type="radio" name="q9_used_product" value="否" onclick="toggle('q9_detail', false)"> 否</label>
+            </div>
+            <div id="q9_detail" class="detail-input">
+                <textarea id="q9_text" placeholder="請詳細說明使用過的產品種類、效果、心得..."></textarea>
+            </div>
+        </div>
+
+        <div class="section-title">B. 飲食與消化習慣</div>
+
+        <div class="form-group">
+            <label>11. 是否便祕？</label>
+            <div class="radio-group">
+                <label><input type="radio" name="q10_constipation" value="是"> 是</label>
+                <label><input type="radio" name="q10_constipation" value="否"> 否</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>12. 一天大便幾次？</label>
+            <input type="text" id="q11_bowel_frequency" placeholder="請填寫數字或描述 (例如：1次/不固定/2-3天1次)">
+        </div>
+
+        <div class="form-group">
+            <label>13. 平時三餐主要吃什麼？</label>
+            <textarea id="q12_meals" placeholder="請詳細描述三餐內容 (例如：早餐：吐司+牛奶，午餐：便當，晚餐：外食麵食...)"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>14. 平時是否有喝咖啡/茶的習慣？</label>
+            <textarea id="q13_coffee_tea" placeholder="無，或請詳述種類、頻率、份量 (例如：每天一杯拿鐵、綠茶隨意喝...)"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>15. 平時喜好澱粉/精緻糕點/零食嗎？</label>
+            <textarea id="q14_snacks_sweets" placeholder="請詳述喜好種類及頻率 (例如：喜歡吃麵包/蛋糕，一週3次；洋芋片每天吃...)"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>16. 飲食狀況補充 <span class="sub-label">(炸物/甜食/水果/餐量/蔬菜份量)</span></label>
+            <textarea id="q15_diet_detail" placeholder="請描述：每日炸物/甜食/水果攝取頻率、三餐份量(例如：飯量是否足夠？)、每餐蔬菜份量(約幾個拳頭？)..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>17. 每日飲水量 <span class="sub-label">(純水，不含茶/飲料/咖啡/果汁)</span></label>
+            <input type="text" id="q16_water_intake" placeholder="請填寫數字，例如：2000 ml">
+        </div>
+
+        <div class="form-group">
+            <label>18. 喝酒頻率？每次喝多少？</label>
+            <textarea id="q17_alcohol" placeholder="無，或請詳述 (例如：一週2次，每次啤酒330ml 2罐)"></textarea>
+        </div>
+
+        <div class="section-title">C. 生活作息與健康</div>
+
+        <div class="form-group">
+            <label>19. 是否手腳冰冷？</label>
+            <div class="radio-group">
+                <label><input type="radio" name="q18_cold_limbs" value="是"> 是</label>
+                <label><input type="radio" name="q18_cold_limbs" value="否"> 否</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>20. 是否水腫？</label>
+            <div class="radio-group">
+                <label><input type="radio" name="q19_edema" value="是"> 是</label>
+                <label><input type="radio" name="q19_edema" value="否"> 否</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>21. 有無特殊疾病？</label>
+            <textarea id="q20_illness" placeholder="無，或請詳細說明 (例如：高血壓/糖尿病/甲狀腺問題...)"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>22. 是否有蟹足腫？</label>
+            <div class="radio-group">
+                <label><input type="radio" name="q_keloid" value="是"> 是</label>
+                <label><input type="radio" name="q_keloid" value="否"> 否</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>23. 目前是否有使用藥物？ <span class="sub-label">(如荷爾蒙、避孕藥、三高藥物、中藥、抗憂鬱焦慮藥物)</span></label>
+            <textarea id="q21_medication" placeholder="無，或請詳細說明目前正在使用的藥物"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>24. 是否有運動習慣？</label>
+            <div class="radio-group">
+                <label><input type="radio" name="q22_exercise" value="有" onclick="toggle('q22_detail', true)"> 有</label>
+                <label><input type="radio" name="q22_exercise" value="無" onclick="toggle('q22_detail', false)"> 無</label>
+            </div>
+            <div id="q22_detail" class="detail-input">
+                <textarea id="q22_text" placeholder="請詳述運動項目、一週幾次？每次幾分鐘？ (例如：慢跑/健身，一週3次，每次60分鐘)"></textarea>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>25. 請問睡眠狀況？</label>
+            <textarea id="q23_sleep_quality" placeholder="請描述睡眠品質 (例如：容易入睡/多夢/淺眠...)"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>26. 平時作息？睡眠時間幾小時？</label>
+            <textarea id="q24_routine_sleep_hours" placeholder="例如：晚上11點睡，早上7點起，約8小時；或熬夜到2點，只睡6小時..."></textarea>
+        </div>
+
+
+        <button onclick="generateImage()">提交並產生諮詢卡圖片</button>
+    </div>
+
+    <div id="capture-area">
+        <h2>🏋️‍♀️ 減重顧客諮詢紀錄 🥗</h2>
+        <div class="res-header">WEIGHT LOSS CONSULTATION REPORT</div>
+        
+        <div class="res-grid-basic">
+            <div><strong>日期：</strong><span id="resDate"></span></div>
+            <div><strong>年齡：</strong><span id="resQ1"></span></div>
+            <div><strong>性別：</strong><span id="resQ2"></span></div>
+            <div><strong>職業：</strong><span id="resQ3"></span></div>
+        </div>
+
+        <div class="res-section">
+            <div class="res-section-title">A. 體態與目標</div>
+            <div class="res-row"><div class="res-label">身高 / 體重：</div><div class="res-value"><span id="resQ4"></span>公分 / <span id="resQ5"></span>公斤</div></div>
+            <div class="res-row"><div class="res-label">體脂率：</div><div class="res-value"><span id="resQ6"></span> %</div></div>
+            <div class="res-row"><div class="res-label">最在意的部位：</div><div class="res-value" id="resQ7"></div></div>
+            <div class="res-row"><div class="res-label">想瘦幾公斤：</div><div class="res-value" id="resQ8"></div></div>
+            <div class="res-row"><div class="res-label">預估減重時間：</div><div class="res-value" id="resQ_Time"></div></div>
+
+            <div class="res-row"><div class="res-label">曾使用瘦身產品：</div><div class="res-value" id="resQ9"></div></div>
+        </div>
+
+        <div class="res-section">
+            <div class="res-section-title">B. 飲食與消化習慣</div>
+            <div class="res-row"><div class="res-label">是否便祕：</div><div class="res-value" id="resQ10"></div></div>
+            <div class="res-row"><div class="res-label">大便頻率：</div><div class="res-value" id="resQ11"></div></div>
+            <div class="res-row"><div class="res-label">平時三餐內容：</div><div class="res-value" id="resQ12"></div></div>
+            <div class="res-row"><div class="res-label">咖啡/茶習慣：</div><div class="res-value" id="resQ13"></div></div>
+            <div class="res-row"><div class="res-label">喜好澱粉/零食：</div><div class="res-value" id="resQ14"></div></div>
+            <div class="res-row"><div class="res-label">飲食狀況補充：</div><div class="res-value" id="resQ15"></div></div>
+            <div class="res-row"><div class="res-label">每日飲水量：</div><div class="res-value" id="resQ16"></div></div>
+            <div class="res-row"><div class="res-label">喝酒頻率/份量：</div><div class="res-value" id="resQ17"></div></div>
+        </div>
+
+        <div class="res-section">
+            <div class="res-section-title">C. 生活作息與健康</div>
+            <div class="res-row"><div class="res-label">是否手腳冰冷：</div><div class="res-value" id="resQ18"></div></div>
+            <div class="res-row"><div class="res-label">是否水腫：</div><div class="res-value" id="resQ19"></div></div>
+            <div class="res-row"><div class="res-label">有無特殊疾病：</div><div class="res-value" id="resQ20"></div></div>
+            <div class="res-row"><div class="res-label">是否有蟹足腫：</div><div class="res-value" id="resQ_Keloid"></div></div>
+
+            <div class="res-row"><div class="res-label">目前使用藥物：</div><div class="res-value" id="resQ21"></div></div>
+            <div class="res-row"><div class="res-label">運動習慣：</div><div class="res-value" id="resQ22"></div></div>
+            <div class="res-row"><div class="res-label">睡眠狀況：</div><div class="res-value" id="resQ23"></div></div>
+            <div class="res-row"><div class="res-label">平時作息/睡眠時數：</div><div class="res-value" id="resQ24"></div></div>
+        </div>
+
+        <div class="footer-credit">健康減重顧問系統 - 您的專屬健康夥伴</div>
+    </div>
+
+    <div id="output-container">
+        <h3>✅ 減重諮詢卡已生成</h3>
+        <p class="hint">請長按圖片儲存，或傳送給您的顧問</p>
+        <div id="img-placeholder"></div>
+    </div>
+
+    <script>
+        // 切換顯示詳細輸入框的函數
+        function toggle(id, show) {
+            const el = document.getElementById(id);
+            if(show) {
+                el.classList.add('show');
+            } else {
+                el.classList.remove('show');
+                const detailInput = el.querySelector('input, textarea');
+                if (detailInput) {
+                    detailInput.value = ''; // 隱藏時清空內容
+                }
+            }
+        }
+
+        // 取得單選或多選的值的函數
+        function getVal(name) {
+            const els = document.getElementsByName(name);
+            for(let el of els) {
+                if(el.checked) return el.value;
+            }
+            return ""; // 未填
+        }
+
+        function generateImage() {
+            // --- 1. 收集所有資料 ---
+            const date = new Date().toLocaleDateString();
+            const q1_age = document.getElementById('q1_age').value || "未填寫";
+            const q2_gender = getVal('q2_gender') || "未填寫";
+            const q3_job = document.getElementById('q3_job').value || "未填寫";
+            const q4_height = document.getElementById('q4_height').value || "未填寫";
+            const q5_weight = document.getElementById('q5_weight').value || "未填寫";
+            const q6_bodyfat = document.getElementById('q6_bodyfat').value || "未填寫";
+            const q7_concern = document.getElementById('q7_concern').value || "未填寫";
+            const q8_target_weight_loss = document.getElementById('q8_target_weight_loss').value || "未填寫";
+            
+            // NEW: Time Goal
+            const q_time_goal = document.getElementById('q_time_goal').value || "未填寫";
+
+            // Q9 瘦身產品
+            let q9_main = getVal('q9_used_product');
+            let q9_text = document.getElementById('q9_text').value;
+            let q9_final = q9_main === "是" ? `有，${q9_text || "未詳述"}` : (q9_main || "未填寫");
+
+            // Q10 便秘
+            const q10_constipation = getVal('q10_constipation') || "未填寫";
+            const q11_bowel_frequency = document.getElementById('q11_bowel_frequency').value || "未填寫";
+            const q12_meals = document.getElementById('q12_meals').value || "未填寫";
+            const q13_coffee_tea = document.getElementById('q13_coffee_tea').value || "未填寫";
+            const q14_snacks_sweets = document.getElementById('q14_snacks_sweets').value || "未填寫";
+            const q15_diet_detail = document.getElementById('q15_diet_detail').value || "未填寫";
+            const q16_water_intake = document.getElementById('q16_water_intake').value || "未填寫";
+            const q17_alcohol = document.getElementById('q17_alcohol').value || "未填寫";
+
+            // Q18 手腳冰冷
+            const q18_cold_limbs = getVal('q18_cold_limbs') || "未填寫";
+            // Q19 水腫
+            const q19_edema = getVal('q19_edema') || "未填寫";
+            const q20_illness = document.getElementById('q20_illness').value || "無";
+            
+            // NEW: Keloid
+            const q_keloid = getVal('q_keloid') || "未填寫";
+
+            const q21_medication = document.getElementById('q21_medication').value || "無";
+
+            // Q22 運動習慣
+            let q22_main = getVal('q22_exercise');
+            let q22_text = document.getElementById('q22_text').value;
+            let q22_final = q22_main === "有" ? `有，${q22_text || "未詳述"}` : (q22_main || "未填寫");
+
+            const q23_sleep_quality = document.getElementById('q23_sleep_quality').value || "未填寫";
+            const q24_routine_sleep_hours = document.getElementById('q24_routine_sleep_hours').value || "未填寫";
+
+            // --- 2. 驗證 (可根據需求增加更多必填檢查) ---
+            if(!q1_age || !q4_height || !q5_weight) { 
+                alert("請填寫年齡、身高和體重！"); 
+                return; 
+            }
+
+            // --- 3. 填入資料到隱藏的卡片模板 ---
+            document.getElementById('resDate').innerText = date;
+            document.getElementById('resQ1').innerText = q1_age;
+            document.getElementById('resQ2').innerText = q2_gender;
+            document.getElementById('resQ3').innerText = q3_job;
+            document.getElementById('resQ4').innerText = q4_height;
+            document.getElementById('resQ5').innerText = q5_weight;
+            document.getElementById('resQ6').innerText = q6_bodyfat;
+            document.getElementById('resQ7').innerText = q7_concern;
+            document.getElementById('resQ8').innerText = q8_target_weight_loss;
+            
+            // NEW MAP
+            document.getElementById('resQ_Time').innerText = q_time_goal;
+
+            document.getElementById('resQ9').innerText = q9_final;
+
+            document.getElementById('resQ10').innerText = q10_constipation;
+            document.getElementById('resQ11').innerText = q11_bowel_frequency;
+            document.getElementById('resQ12').innerText = q12_meals;
+            document.getElementById('resQ13').innerText = q13_coffee_tea;
+            document.getElementById('resQ14').innerText = q14_snacks_sweets;
+            document.getElementById('resQ15').innerText = q15_diet_detail;
+            document.getElementById('resQ16').innerText = q16_water_intake;
+            document.getElementById('resQ17').innerText = q17_alcohol;
+
+            document.getElementById('resQ18').innerText = q18_cold_limbs;
+            document.getElementById('resQ19').innerText = q19_edema;
+            document.getElementById('resQ20').innerText = q20_illness;
+            
+            // NEW MAP
+            document.getElementById('resQ_Keloid').innerText = q_keloid;
+
+            document.getElementById('resQ21').innerText = q21_medication;
+            document.getElementById('resQ22').innerText = q22_final;
+            document.getElementById('resQ23').innerText = q23_sleep_quality;
+            document.getElementById('resQ24').innerText = q24_routine_sleep_hours;
+
+            // --- 4. 生成圖片 ---
+            const captureArea = document.getElementById('capture-area');
+            const outputContainer = document.getElementById('output-container');
+            const imgPlaceholder = document.getElementById('img-placeholder');
+
+            imgPlaceholder.innerHTML = ''; // 清空舊圖
+            outputContainer.style.display = 'block'; // 顯示結果區
+
+            html2canvas(captureArea, {
+                scale: 2, // 提高解析度
+                backgroundColor: "#ffffff"
+            }).then(canvas => {
+                const imgData = canvas.toDataURL("image/png");
+                const img = document.createElement('img');
+                img.src = imgData;
+                imgPlaceholder.appendChild(img);
+                
+                outputContainer.scrollIntoView({ behavior: 'smooth' }); // 自動捲動到結果區
+            });
+        }
+    </script>
+
+</body>
+</html>
